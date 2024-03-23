@@ -1,0 +1,16 @@
+{
+  "name": "generate_secrets",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "pem-jwk": "^2.0.0",
+    "selfsigned": "^2.4.1",
+    "uuid": "^9.0.1"
+  }
+}

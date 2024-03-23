@@ -1,30 +1,24 @@
-"use server"
+'use server'
 
 import { cookies } from 'next/headers';
-import jwt from 'jsonwebtoken';
 
-export type UserSession = {
-    userId: number,
+export type Session = {
+    access_token: string | undefined,
+    refresh_token: string,
 }
 
-export default async function getUserSession(): Promise<UserSession | undefined> {
-    const accessToken = cookies().get('access_token');
+export default async function getSession(): Promise<Session | undefined> {
+    const cookie_store = cookies();
 
-    if (!accessToken?.value) {
-        return undefined;
-    }
+    const access_token = cookie_store.get('access_token')?.value;
+    const refresh_token = cookie_store.get('refresh_token')?.value;
 
-    const decodedToken = jwt.decode(accessToken.value) as {
-        sub: string,
-    };
-
-    const userId = decodedToken.sub;
-
-    if (!userId) {
+    if (!refresh_token) {
         return undefined;
     }
 
     return {
-        userId: parseInt(userId),
+        access_token,
+        refresh_token,
     }
 }

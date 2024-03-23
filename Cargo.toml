@@ -1,0 +1,15 @@
+[workspace]
+resolver = "2"
+members = [
+    "services/users",
+    "services/sso",
+    "services/characters",
+    "services/wallet",
+    "libraries/eve-sso",
+    "libraries/message-bus",
+    "libraries/auth-token",
+    "libraries/eve-esi",
+    "libraries/logging",
+    "libraries/service-sso-api",
+    "libraries/db-utils",
+]

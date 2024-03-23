@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import opentype from "tailwindcss-opentype";
 
 const config: Config = {
   content: [
@@ -15,6 +16,6 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  plugins: [opentype as any],
 };
 export default config;

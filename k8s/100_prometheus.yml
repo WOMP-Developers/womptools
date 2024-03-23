@@ -1,0 +1,75 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-conf
+  namespace: womptools-monitoring
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+    scrape_configs:
+      - job_name: aggregated-trace-metrics
+        static_configs:
+          - targets: ['otel-cip:8889']
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: womptools-monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+        - name: prometheus
+          image: prom/prometheus
+          ports:
+            - containerPort: 9090
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/prometheus
+          resources:
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+      volumes:
+        - name: config-volume
+          configMap:
+            name: prometheus-conf
+            defaultMode: 420
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-cip
+  namespace: womptools-monitoring
+spec:
+  type: ClusterIP
+  selector:
+    app: prometheus
+  ports:
+    - name: prometheus-port
+      protocol: TCP
+      port: 9090
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-port
+  namespace: womptools-monitoring
+spec:
+  type: NodePort
+  selector:
+    app: prometheus
+  ports:
+    - name: prometheus-web
+      protocol: TCP
+      port: 9090

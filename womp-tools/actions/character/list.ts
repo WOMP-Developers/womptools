@@ -1,13 +1,28 @@
-import { headers, cookies } from "next/headers";
+'use server'
 
-const CHARACTER_LIST_URL = "http://localhost:8081/v1/character/list";
+import authorizedFetch from "../auth/fetch";
+import { Character } from "./dto";
+
+const URL = `${process.env.ENDPOINT_CHAR}/v1/characters/list`;
+
+export type CharactersResponse = {
+    successful: boolean,
+    characters: Character[],
+}
 
 export default async function getCharacterList() {
-    const access_token = cookies().get('access_token');
+    try {
+        const response = await authorizedFetch(URL, {
+            method: 'GET',
+            next: {
+                tags: ['characters']
+            }
+        }) as CharactersResponse;
 
-    const res = await fetch(CHARACTER_LIST_URL, {
-        headers: { Authorization: `Bearer ${access_token?.value}`}
-    });
+        return response;
 
-    return await res.text();
+    } catch(error) {
+        console.error(error);
+        return { successful: false, characters: [] };
+    }
 }
