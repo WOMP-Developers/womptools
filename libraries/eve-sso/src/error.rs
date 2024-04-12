@@ -9,7 +9,7 @@ pub(crate) fn create_error(kind: ErrorKind) -> Error {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Error(Box<ErrorKind>);
+pub struct Error(pub Box<ErrorKind>);
 
 impl Error {
     pub fn kind(&self) -> &ErrorKind {

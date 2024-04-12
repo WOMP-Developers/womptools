@@ -8,4 +8,5 @@ pub struct Credentials {
     pub access_token: String,
     pub updated_at: DateTime<Utc>,
     pub expires_at: DateTime<Utc>,
+    pub is_stale: bool,
 }

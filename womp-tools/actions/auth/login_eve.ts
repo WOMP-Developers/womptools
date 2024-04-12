@@ -6,7 +6,7 @@ import { v4 as uuid } from 'uuid';
 import queryString from 'query-string';
 
 const ESI_LOGIN_ENDPOINT = "https://login.eveonline.com/v2/oauth/authorize/";
-const ESI_SCOPE = "publicData esi-wallet.read_character_wallet.v1 esi-search.search_structures.v1 esi-universe.read_structures.v1 esi-assets.read_assets.v1 esi-markets.structure_markets.v1 esi-corporations.read_structures.v1 esi-industry.read_character_jobs.v1 esi-markets.read_character_orders.v1 esi-characters.read_blueprints.v1 esi-contracts.read_character_contracts.v1 esi-wallet.read_corporation_wallets.v1 esi-assets.read_corporation_assets.v1 esi-corporations.read_blueprints.v1 esi-contracts.read_corporation_contracts.v1 esi-corporations.read_starbases.v1 esi-industry.read_corporation_jobs.v1 esi-markets.read_corporation_orders.v1 esi-corporations.read_facilities.v1";
+const ESI_SCOPE = "publicData esi-wallet.read_character_wallet.v1 esi-clones.read_clones.v1 esi-assets.read_assets.v1 esi-industry.read_character_jobs.v1 esi-markets.read_character_orders.v1 esi-characters.read_blueprints.v1 esi-contracts.read_character_contracts.v1 esi-industry.read_character_mining.v1";
 
 export default async function loginEve() {
     const redirectUri = encodeURI(process.env.ESI_REDIRECT_URI as string);
