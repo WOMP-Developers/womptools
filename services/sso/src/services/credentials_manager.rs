@@ -1,4 +1,4 @@
-use eve_sso::{parse::parse_access_token, AccessToken, EveSSO, Tokens};
+use eve_sso::{error::ErrorKind, parse::parse_access_token, AccessToken, EveSSO, Tokens};
 use message_bus::{ServiceEventProducer, StreamEvent};
 use sqlx::types::chrono::Utc;
 
@@ -133,7 +133,14 @@ impl CredentialsManager {
         let credentials = self.database.select_credentials(character_id).await?;
 
         if let Some(credentials) = credentials {
-            if credentials.expires_at > Utc::now() {
+            if credentials.is_stale {
+                tracing::warn!(character_id, "credentials for character is stale");
+
+                // TODO: evaluate if it's good idea to send this message every time.
+                self.producer
+                    .send_event(StreamEvent::CharacterTokenInvalid { character_id })
+                    .await?;
+            } else if credentials.expires_at > Utc::now() {
                 tracing::info!(character_id, "token not expired skip refresh");
 
                 self.producer
@@ -175,23 +182,51 @@ async fn refresh_credentials(
     producer: &ServiceEventProducer,
 ) -> anyhow::Result<Tokens> {
     tracing::info!(character_id, "refresh character credentials");
-    let tokens = eve_sso.oauth_refresh(refresh_token).await?;
 
-    // TODO: Encrypt the credentials before storing them in the database or sending them to redis.
-    db.update_credentials(
-        character_id,
-        &tokens.access_token.access_token,
-        &tokens.refresh_token,
-        &tokens.access_token.expires_at,
-    )
-    .await?;
+    match eve_sso.oauth_refresh(refresh_token).await {
+        Ok(tokens) => {
+            // TODO: Encrypt the credentials before storing them in the database or sending them to redis.
+            db.update_credentials(
+                character_id,
+                &tokens.access_token.access_token,
+                &tokens.refresh_token,
+                &tokens.access_token.expires_at,
+            )
+            .await?;
 
-    producer
-        .send_event(StreamEvent::CharacterAccessToken {
-            user_id,
-            access_token: tokens.access_token.access_token.clone(),
-        })
-        .await?;
+            producer
+                .send_event(StreamEvent::CharacterAccessToken {
+                    user_id,
+                    access_token: tokens.access_token.access_token.clone(),
+                })
+                .await?;
 
-    Ok(tokens)
+            Ok(tokens)
+        }
+        Err(error) => {
+            handle_oauth_error(error.kind(), character_id, db, producer).await?;
+
+            Err(anyhow::Error::new(error))
+        }
+    }
+}
+
+async fn handle_oauth_error(
+    kind: &ErrorKind,
+    character_id: u64,
+    db: &Database,
+    producer: &ServiceEventProducer,
+) -> anyhow::Result<()> {
+    match kind {
+        ErrorKind::AuthorizationError => {
+            db.set_is_stale(character_id, true).await?;
+
+            producer
+                .send_event(StreamEvent::CharacterTokenInvalid { character_id })
+                .await?;
+        }
+        _ => {}
+    }
+
+    Ok(())
 }

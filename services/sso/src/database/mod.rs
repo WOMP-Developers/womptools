@@ -71,7 +71,7 @@ impl Database {
     ) -> anyhow::Result<()> {
         sqlx::query(
             r#"
-            UPDATE `credentials` SET access_token=?, refresh_token=?, expires_at=? WHERE character_id=?
+            UPDATE `credentials` SET access_token=?, refresh_token=?, expires_at=?, is_stale=FALSE WHERE character_id=?
             "#,
         )
         .bind(access_token)
@@ -96,5 +96,16 @@ impl Database {
                 .await?;
 
         Ok(credentials)
+    }
+
+    #[tracing::instrument]
+    pub async fn set_is_stale(&self, character_id: u64, is_stale: bool) -> anyhow::Result<()> {
+        sqlx::query("UPDATE `credentials` SET is_stale=? WHERE character_id=?")
+            .bind(is_stale)
+            .bind(character_id)
+            .execute(&self.db_pool)
+            .await?;
+
+        Ok(())
     }
 }
