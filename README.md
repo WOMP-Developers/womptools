@@ -55,7 +55,7 @@ Do no share these secret keys with anyone.
 #### Setup Kubernetes Cluster
 The databases, message queue, and monitoring services run within kubernetes. Create the necessary resources within kubernetes by running the following command:
 ```sh
-kubectl -f k8s/
+kubectl apply -f k8s/
 ```
 
 During development most services will be exposed externally using `NodePort`. Examine the assigned ports for each service using the following command:
